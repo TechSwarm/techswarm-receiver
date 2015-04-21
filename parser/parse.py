@@ -1,6 +1,6 @@
 from timestamp import get_timestamp
 
-def parse_IMU(gyro, accel, magnet):
+def parse_IMU(gyro, accel, magnet, pressure):
     payload = {}
     
     payload['timestamp'] = get_timestamp()
@@ -19,3 +19,6 @@ def parse_IMU(gyro, accel, magnet):
     payload['magnet_x'] = int(data[1])
     payload['magnet_y'] = int(data[2])
     payload['magnet_z'] = int(data[3])
+
+    data = pressure.split(',')
+    payload['pressure'] = int(data[1])

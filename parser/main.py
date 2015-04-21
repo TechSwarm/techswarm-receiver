@@ -9,4 +9,5 @@ while True:
         gyro = input_record
         accel = pipeout.readline()
         magnet = pipeout.readline()
-        parse.parse_IMU(gyro, accel, magnet)
+        pressure = pipeout.readline()
+        parse.parse_IMU(gyro, accel, magnet, pressure)
