@@ -1,5 +1,6 @@
 from timestamp import get_timestamp
 
+
 def parse_IMU(gyro, accel, magnet, pressure):
     payload = {}
     
