@@ -8,8 +8,6 @@ def get_timestamp():
     Serialize actual datetime provided as simplified ISO 8601 (without timezone)
     string
 
-    :type datetime: datetime
-    :param datetime: datetime object to convert to string
     :return: serialized datetime
     :rtype: str
     """
