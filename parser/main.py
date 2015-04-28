@@ -1,18 +1,27 @@
-import config
-import parse
+from parser import config
+from parser.imu import IMUParser
 
-pipeout = open(config.PIPE_NAME, 'r')
 
-while True:
-    input_record = pipeout.readline()
-    if input_record.split(',')[0] == '$GYRO':
-        gyro = input_record
-    if input_record.split(',')[0] == '$ACCEL':
-        accel = pipeout.readline()
-    if input_record.split(',')[0] == '$MAGNET':
-        magnet = pipeout.readline()
-    if input_record.split(',')[0] == '$MBAR':
-        pressure = pipeout.readline()
-    if all([gyro, accel, magnet, pressure]):
-        parse.parse_IMU(gyro, accel, magnet, pressure)
-        gyro = accel = magnet = pressure = None
+def parse(input_file=None):
+    """
+    Parse the file specified as input.
+
+    :param input_file: file to read input from. If None, then pipe specified
+        in config is used
+    :type input_file: file
+    """
+    if input_file is None:
+        input_file = open(config.PIPE_NAME, 'r')
+
+    parsers = [
+        IMUParser()
+    ]
+
+    while True:
+        line = input_file.readline()
+        if not line:
+            continue
+
+        values = line.split(',')
+        for parser in parsers:
+            parser.parse(*values)
