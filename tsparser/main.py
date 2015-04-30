@@ -24,4 +24,4 @@ def parse(input_file=None):
 
         values = line.split(',')
         for parser in parsers:
-            parser.parse(*values)
+            parser.parse(line, *values)

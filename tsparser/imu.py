@@ -9,7 +9,7 @@ class IMUParser(BaseParser):
         self.magnet = None
         self.pressure = None
 
-    def parse(self, data_id, *values):
+    def parse(self, line, data_id, *values):
         values = [int(x) for x in values]
         if data_id == '$GYRO':
             self.gyro = values

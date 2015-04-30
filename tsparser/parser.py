@@ -3,10 +3,12 @@ from abc import ABCMeta, abstractmethod
 
 class BaseParser(metaclass=ABCMeta):
     @abstractmethod
-    def parse(self, data_id, *values):
+    def parse(self, line, data_id, *values):
         """
         Take one line of probe's input and interpret it.
 
+        :param line: the line of output without any changes
+        :type line: str
         :param data_id: type of data to be quickly identified by parsers
             (actually, the substring before the first comma)
         :type data_id: str
