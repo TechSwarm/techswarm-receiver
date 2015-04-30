@@ -1,3 +1,3 @@
-from parser import main
+from tsparser import main
 
 main.parse()

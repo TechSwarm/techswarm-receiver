@@ -1,5 +1,5 @@
-from parser import config
-from parser.imu import IMUParser
+from tsparser import config
+from tsparser.imu import IMUParser
 
 
 def parse(input_file=None):

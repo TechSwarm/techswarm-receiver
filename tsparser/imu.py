@@ -1,5 +1,5 @@
-from parser.parser import BaseParser
-from parser.timestamp import get_timestamp
+from tsparser.parser import BaseParser
+from tsparser.timestamp import get_timestamp
 
 
 class IMUParser(BaseParser):
