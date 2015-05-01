@@ -1,4 +1,4 @@
-from tsparser.parser import BaseParser
+from tsparser.parser import BaseParser, ParseException
 
 
 class IMUParser(BaseParser):
@@ -9,16 +9,23 @@ class IMUParser(BaseParser):
         self.pressure = None
 
     def parse(self, line, data_id, *values):
-        if data_id == '$GYRO':
-            self.gyro = [int(x) for x in values]
-        elif data_id == '$ACCEL':
-            self.accel = [int(x) for x in values]
-        elif data_id == '$MAGNET':
-            self.magnet = [int(x) for x in values]
-        elif data_id == '$MBAR':
+        if data_id == '$MBAR':
+            if len(values) != 1:
+                raise ParseException('MBAR must provide 1 value')
+
             self.pressure = int(values[0])
         else:
-            return False
+            if data_id == '$GYRO':
+                self.gyro = [int(x) for x in values]
+            elif data_id == '$ACCEL':
+                self.accel = [int(x) for x in values]
+            elif data_id == '$MAGNET':
+                self.magnet = [int(x) for x in values]
+            else:
+                return False
+
+            if len(values) != 3:
+                raise ParseException('GYRO/ACCEL/MAGNET must provide 3 values')
 
         if all([self.gyro, self.accel, self.magnet, self.pressure]):
             # todo send it instead of just printing
