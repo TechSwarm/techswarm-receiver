@@ -9,15 +9,14 @@ class IMUParser(BaseParser):
         self.pressure = None
 
     def parse(self, line, data_id, *values):
-        values = [int(x) for x in values]
         if data_id == '$GYRO':
-            self.gyro = values
+            self.gyro = [int(x) for x in values]
         elif data_id == '$ACCEL':
-            self.accel = values
+            self.accel = [int(x) for x in values]
         elif data_id == '$MAGNET':
-            self.magnet = values
+            self.magnet = [int(x) for x in values]
         elif data_id == '$MBAR':
-            self.pressure = values[0]
+            self.pressure = int(values[0])
         else:
             return False
 
