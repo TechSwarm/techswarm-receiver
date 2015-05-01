@@ -20,3 +20,11 @@ class BaseParser(metaclass=ABCMeta):
             not be parsed by the rest of the parsers); False otherwise
         :rtype: bool
         """
+
+
+class ParseException(Exception):
+    """
+    Raised when an error occurred during parsing the output. Usually means a
+    transmission error.
+    """
+    pass

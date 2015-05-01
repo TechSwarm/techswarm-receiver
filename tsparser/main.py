@@ -1,5 +1,5 @@
 from tsparser import config
-from tsparser.parser import BaseParser
+from tsparser.parser import BaseParser, ParseException
 from tsparser.imu import IMUParser
 
 
@@ -26,4 +26,8 @@ def parse(input_file=None):
         values = line.split(',')
         BaseParser.timestamp = values.pop()
         for parser in parsers:
-            parser.parse(line, *values)
+            if parser.parse(line, *values):
+                break
+        else:
+            raise ParseException('Output line was not parsed by any parser: {}'
+                                 .format(line))
