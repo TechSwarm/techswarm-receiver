@@ -24,7 +24,7 @@ def parse(input_file=None):
             continue
 
         values = line.split(',')
-        BaseParser.timestamp = values.pop()
+        BaseParser.timestamp = values.pop().split("\n")[0]
         for parser in parsers:
             if parser.parse(line, *values):
                 break

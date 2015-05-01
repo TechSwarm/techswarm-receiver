@@ -15,8 +15,12 @@ def send_data(data, url):
     :return True if data have been sent successfully; False otherwise
     :rtype bool
     """
-    data['Authorization'] = generate_auth(config.USERNAME, config.PASSWORD)
+    header = {'Authorization': generate_auth(config.USERNAME, config.PASSWORD)}
 
-    request = urllib.request.Request(url, headers=data)
-    urllib.request.urlopen(request)
-    # todo check response and return True or False
+    payload = urllib.parse.urlencode(data).encode('utf-8')
+    print(payload)
+    request = urllib.request.Request(url, payload, header)
+    response = urllib.request.urlopen(request)
+    if response.status == 201:
+        return True
+    return False
