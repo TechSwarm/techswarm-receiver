@@ -1,4 +1,5 @@
 from tsparser import config
+from tsparser.parser import BaseParser
 from tsparser.imu import IMUParser
 
 
@@ -23,5 +24,6 @@ def parse(input_file=None):
             continue
 
         values = line.split(',')
+        BaseParser.timestamp = values.pop()
         for parser in parsers:
             parser.parse(line, *values)

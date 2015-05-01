@@ -1,5 +1,4 @@
 from tsparser.parser import BaseParser
-from tsparser.timestamp import get_timestamp
 
 
 class IMUParser(BaseParser):
@@ -31,7 +30,7 @@ class IMUParser(BaseParser):
 
     def generate_data(self):
         return {
-            'timestamp': get_timestamp(),
+            'timestamp': BaseParser.timestamp,
 
             'gyro_x': self.gyro[0],
             'gyro_y': self.gyro[1],

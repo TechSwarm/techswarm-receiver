@@ -2,6 +2,8 @@ from abc import ABCMeta, abstractmethod
 
 
 class BaseParser(metaclass=ABCMeta):
+    timestamp = None
+
     @abstractmethod
     def parse(self, line, data_id, *values):
         """
