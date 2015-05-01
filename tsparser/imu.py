@@ -10,22 +10,16 @@ class IMUParser(BaseParser):
 
     def parse(self, line, data_id, *values):
         if data_id == '$MBAR':
-            if len(values) != 1:
-                raise ParseException('MBAR must provide 1 value')
-
-            self.pressure = int(values[0])
+            self.magnet = self.validate_values(values, 3, 'MBAR')[0]
         else:
             if data_id == '$GYRO':
-                self.gyro = [int(x) for x in values]
+                self.magnet = self.validate_values(values, 3, 'GYRO')
             elif data_id == '$ACCEL':
-                self.accel = [int(x) for x in values]
+                self.magnet = self.validate_values(values, 3, 'ACCEL')
             elif data_id == '$MAGNET':
-                self.magnet = [int(x) for x in values]
+                self.magnet = self.validate_values(values, 3, 'MAGNET')
             else:
                 return False
-
-            if len(values) != 3:
-                raise ParseException('GYRO/ACCEL/MAGNET must provide 3 values')
 
         if all([self.gyro, self.accel, self.magnet, self.pressure]):
             # todo send it instead of just printing
@@ -33,6 +27,20 @@ class IMUParser(BaseParser):
             self.gyro = self.accel = self.magnet = self.pressure = None
 
         return True
+
+    @staticmethod
+    def validate_values(values, num, data_id):
+        """
+        Utility function to check number of values provided and convert them to
+        ints.
+
+        :param num: expected number of values
+        :param data_id: data ID (like GYRO, ACCEL, etc.) to show in case of
+            error
+        """
+        if len(values) != num:
+            raise ParseException('{} must provide 3 values'.format(data_id))
+        return [int(x) for x in values]
 
     def generate_data(self):
         return {
