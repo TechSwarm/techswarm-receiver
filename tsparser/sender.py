@@ -9,14 +9,18 @@ def send_data(data, url):
     Send data to server
 
     :param data: data to send
-    :type data: dictionary
+    :type data: dict
     :param url: url where data are sent to
     :type url: str
     :return True if data have been sent successfully; False otherwise
     :rtype bool
     """
-    data['Authorization'] = generate_auth(config.USERNAME, config.PASSWORD)
+    headers = {
+        'Authorization': generate_auth(config.USERNAME, config.PASSWORD)
+    }
 
-    request = urllib.request.Request(url, headers=data)
+    request = urllib.request.Request(
+        url, data=urllib.parse.urlencode(data).encode('utf-8'), headers=headers
+    )
     urllib.request.urlopen(request)
     # todo check response and return True or False
