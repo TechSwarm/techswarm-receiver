@@ -45,7 +45,8 @@ class IMUParser(BaseParser):
             error
         """
         if len(values) != num:
-            raise ParseException('{} must provide ' + num + ' values'.format(data_id))
+            raise ParseException('{} must provide {} values'
+                                 .format(data_id, num))
         return [int(x) for x in values]
 
     def generate_data(self):
