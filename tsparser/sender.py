@@ -23,6 +23,6 @@ def send_data(data, url):
     request = urllib.request.Request(url, payload, header)
     try:
         response = urllib.request.urlopen(request)
-    except HTTPError:
+    except urllib.request.HTTPError:
         return False
-    return respose == 201
+    return response == 201
