@@ -1,4 +1,5 @@
 from tsparser import config
+from tsparser.gps import GPSParser
 from tsparser.parser import BaseParser, ParseException
 from tsparser.imu import IMUParser
 
@@ -15,7 +16,8 @@ def parse(input_file=None):
         input_file = open(config.PIPE_NAME, 'r')
 
     parsers = [
-        IMUParser()
+        IMUParser(),
+        GPSParser()
     ]
 
     while True:
