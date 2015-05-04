@@ -1,5 +1,5 @@
 from tsparser import config
-from tsparser.parser import BaseParser, ParseException
+from tsparser.parser.parser import BaseParser, ParseException
 from tsparser.sender import send_data
 
 

@@ -1,4 +1,4 @@
-from tsparser.parser import BaseParser, ParseException
+from tsparser.parser.parser import BaseParser, ParseException
 from tsparser.sender import send_data
 from tsparser import config
 

@@ -1,7 +1,7 @@
 from tsparser import config
-from tsparser.gps import GPSParser
-from tsparser.parser import BaseParser, ParseException
-from tsparser.imu import IMUParser
+from tsparser.parser.parser import BaseParser, ParseException
+from tsparser.parser.gps import GPSParser
+from tsparser.parser.imu import IMUParser
 
 
 def parse(input_file=None):
