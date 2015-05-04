@@ -1,5 +1,5 @@
 from tsparser import config
-from tsparser.parser.parser import BaseParser, ParseException
+from tsparser.parser.parser import BaseParser
 from tsparser.sender import send_data
 
 
@@ -14,8 +14,8 @@ class GPSParser(BaseParser):
             return False
 
         if not _checksum_valid(line):
-            raise ParseException('Calculated GPS checksum does not equal the '
-                                 'one provided in output')
+            raise ValueError('Calculated GPS checksum does not equal the one '
+                             'provided in output')
         values = list(values)
         # Remove checksum from last value
         values[-1] = values[-1][:values[-1].rindex('*')]
@@ -96,9 +96,8 @@ def _parse_coord(coord, coord_dir, positive_sign, negative_sign):
     """
     dot = coord.index('.')
     if coord_dir != positive_sign and coord_dir != negative_sign:
-        raise ParseException("Coordinate direction '{}' is neither '{}' "
-                             "nor '{}'".format(coord_dir, positive_sign,
-                                               negative_sign))
+        raise ValueError("Coordinate direction '{}' is neither '{}' nor '{}'"
+                         .format(coord_dir, positive_sign, negative_sign))
 
     sign = 1 if coord_dir == positive_sign else -1
     return sign * (float(coord[:dot - 2]) + float(coord[dot - 2:]) / 60)

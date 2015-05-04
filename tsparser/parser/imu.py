@@ -1,4 +1,4 @@
-from tsparser.parser.parser import BaseParser, ParseException
+from tsparser.parser.parser import BaseParser
 from tsparser.sender import send_data
 from tsparser import config
 
@@ -45,8 +45,7 @@ class IMUParser(BaseParser):
             error
         """
         if len(values) != num:
-            raise ParseException('{} must provide {} values'
-                                 .format(data_id, num))
+            raise ValueError('{} must provide {} values'.format(data_id, num))
         return [int(x) for x in values]
 
     def generate_data(self):
