@@ -9,6 +9,14 @@ DEFAULT_TIMESTAMP = '2015-01-01T12:00:00.000000'
 
 
 class ParserTestCase(unittest.TestCase):
+    """
+    TestCase subclass which adds a few utilities to make testing parsers easier.
+
+    The class adds functions to pass piece of output to parsers as well as
+    patches the send_data function, so no data is actually sent to the server,
+    although it can be checked whether the data that would be sent is correct.
+    """
+
     def setUp(self):
         # Add functions to test parsers easily
         parsers = main._get_parsers()
