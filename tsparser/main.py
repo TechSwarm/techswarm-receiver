@@ -1,5 +1,5 @@
 from tsparser import config
-from tsparser.parser.parser import BaseParser, ParseException
+from tsparser.parser import BaseParser, ParseException
 from tsparser.parser.gps import GPSParser
 from tsparser.parser.imu import IMUParser
 
@@ -15,21 +15,27 @@ def parse(input_file=None):
     if input_file is None:
         input_file = open(config.PIPE_NAME, 'r')
 
-    parsers = [
-        IMUParser(),
-        GPSParser()
-    ]
-
+    parsers = _get_parsers()
     while True:
         line = input_file.readline()
         if not line:
             continue
+        _parse_line(parsers, line)
 
-        values = line.split(',')
-        BaseParser.timestamp = values.pop().strip()
-        for parser in parsers:
-            if parser.parse(line, *values):
-                break
-        else:
-            raise ParseException('Output line was not parsed by any parser: {}'
-                                 .format(line))
+
+def _get_parsers():
+    return [
+        IMUParser(),
+        GPSParser()
+    ]
+
+
+def _parse_line(parsers, line):
+    values = line.split(',')
+    BaseParser.timestamp = values.pop().strip()
+    for parser in parsers:
+        if parser.parse(line, *values):
+            break
+    else:
+        raise ParseException('Output line was not parsed by any parser: {}'
+                             .format(line))
