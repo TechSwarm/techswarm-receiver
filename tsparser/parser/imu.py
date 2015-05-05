@@ -1,6 +1,5 @@
 from tsparser.parser import BaseParser
-from tsparser.sender import send_data
-from tsparser import config
+from tsparser import config, sender
 
 
 class IMUParser(BaseParser):
@@ -26,7 +25,7 @@ class IMUParser(BaseParser):
                 return False
 
         if all([self.gyro, self.accel, self.magnet, self.pressure]):
-            if not send_data(self.generate_data(), IMUParser.url):
+            if not sender.send_data(self.generate_data(), IMUParser.url):
                 pass
                 # todo do something when transmission error occur
             print(self.generate_data())

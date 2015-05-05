@@ -1,6 +1,5 @@
 from tsparser.parser import BaseParser
-from tsparser.sender import send_data
-from tsparser import config
+from tsparser import config, sender
 
 
 class GPSParser(BaseParser):
@@ -67,7 +66,7 @@ class GPSParser(BaseParser):
             # Nothing interesting here, but it's the last message before the
             # next $GPGGA, so we can send the data we've obtained
             self.data['timestamp'] = BaseParser.timestamp
-            if not send_data(self.data, self.url):
+            if not sender.send_data(self.data, self.url):
                 pass
                 # todo do something when transmission error occur
             print(self.data)
