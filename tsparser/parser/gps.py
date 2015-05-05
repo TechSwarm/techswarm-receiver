@@ -71,6 +71,7 @@ class GPSParser(BaseParser):
                 pass
                 # todo do something when transmission error occur
             print(self.data)
+            self.data = {}
         return True
 
 
