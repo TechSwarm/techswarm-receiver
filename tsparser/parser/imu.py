@@ -1,4 +1,4 @@
-from tsparser.parser.parser import BaseParser
+from tsparser.parser import BaseParser
 from tsparser.sender import send_data
 from tsparser import config
 
