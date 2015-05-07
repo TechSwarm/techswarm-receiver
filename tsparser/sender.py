@@ -1,8 +1,35 @@
+from queue import Queue
+from threading import Thread
+
 import requests
+
 from tsparser import config
 
 
+send_queue = Queue()
+
+
+class Sender(Thread):
+    def run(self):
+        while True:
+            data, url = send_queue.get()
+            _send_data(data, url)
+            send_queue.task_done()
+
+
 def send_data(data, url):
+    """
+    Add data to send to request queue
+
+    :param data: data to send
+    :type data: dict
+    :param url: url where data are sent to
+    :type url: str
+    """
+    send_queue.put((data, url))
+
+
+def _send_data(data, url):
     """
     Send data to server
 

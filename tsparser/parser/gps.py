@@ -66,10 +66,7 @@ class GPSParser(BaseParser):
             # Nothing interesting here, but it's the last message before the
             # next $GPGGA, so we can send the data we've obtained
             self.data['timestamp'] = BaseParser.timestamp
-            if not sender.send_data(self.data, self.url):
-                pass
-                # todo do something when transmission error occur
-            print(self.data)
+            sender.send_data(self.data, self.url)
             self.data = {}
         return True
 

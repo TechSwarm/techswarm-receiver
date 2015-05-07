@@ -25,10 +25,7 @@ class IMUParser(BaseParser):
                 return False
 
         if all([self.gyro, self.accel, self.magnet, self.pressure]):
-            if not sender.send_data(self.generate_data(), IMUParser.url):
-                pass
-                # todo do something when transmission error occur
-            print(self.generate_data())
+            sender.send_data(self.generate_data(), IMUParser.url)
             self.gyro = self.accel = self.magnet = self.pressure = None
 
         return True

@@ -31,7 +31,6 @@ class ParserTestCase(unittest.TestCase):
         self.patcher = patch('tsparser.sender.send_data')
         self.addCleanup(self.patcher.stop)
         self.send_data_mock = self.patcher.start()
-        self.send_data_mock.return_value = True
 
 
 def _parse_output(self, output):

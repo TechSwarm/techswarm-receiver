@@ -2,6 +2,7 @@ from tsparser import config
 from tsparser.parser import BaseParser, ParseException
 from tsparser.parser.gps import GPSParser
 from tsparser.parser.imu import IMUParser
+from tsparser.sender import Sender
 
 
 def parse(input_file=None):
@@ -12,6 +13,7 @@ def parse(input_file=None):
         in config is used
     :type input_file: file
     """
+    Sender(daemon=True).start()
     if input_file is None:
         input_file = open(config.PIPE_NAME, 'r')
 
