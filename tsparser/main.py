@@ -1,3 +1,4 @@
+from time import sleep
 from tsparser import config
 from tsparser.parser import BaseParser, ParseException
 from tsparser.parser.gps import GPSParser
@@ -21,6 +22,7 @@ def parse(input_file=None):
     while True:
         line = input_file.readline()
         if not line:
+            sleep(0.01)
             continue
         _parse_line(parsers, line)
 
