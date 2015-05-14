@@ -15,8 +15,8 @@ class Sender(Thread):
         while True:
             data, url = send_queue.get()
             _send_data(data, url)
-            send_queue.task_done()
             StatisticDataCollector().on_request_sent((data, url))
+            send_queue.task_done()
 
 
 def send_data(data, url):
