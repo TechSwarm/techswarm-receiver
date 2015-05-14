@@ -4,6 +4,7 @@ from threading import Thread
 import requests
 
 from tsparser import config
+from tsparser.utils import StatisticDataCollector
 
 
 send_queue = Queue()
@@ -15,6 +16,7 @@ class Sender(Thread):
             data, url = send_queue.get()
             _send_data(data, url)
             send_queue.task_done()
+            StatisticDataCollector().on_request_sent((data, url))
 
 
 def send_data(data, url):
@@ -27,6 +29,7 @@ def send_data(data, url):
     :type url: str
     """
     send_queue.put((data, url))
+    StatisticDataCollector().on_new_request((data, url))
 
 
 def _send_data(data, url):
