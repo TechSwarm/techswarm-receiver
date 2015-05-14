@@ -1,6 +1,7 @@
 from datetime import datetime
 from threading import Lock
 
+from tsparser import config
 from tsparser.utils import Logger, Singleton
 
 
@@ -21,7 +22,7 @@ class StatisticDataCollector:
         self.__count_of_queued_requests = 0
         self.__total_count_of_sent_requests = 0
 
-        self.__logger = Logger
+        self.__logger = Logger(config.LOG_FILENAME)
         self.__data_mutex = Lock()
 
     def on_new_received_data(self, data):
