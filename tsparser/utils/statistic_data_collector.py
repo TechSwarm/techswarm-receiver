@@ -5,11 +5,10 @@ from tsparser import config
 from tsparser.utils import Logger, Singleton
 
 
-class StatisticDataCollector:
+class StatisticDataCollector(metaclass=Singleton):
     """
     Thread-safe singleton destined for collecting statistic data.
     """
-    __metaclass__ = Singleton
 
     def __init__(self):
         self.__start_time = datetime.now()
