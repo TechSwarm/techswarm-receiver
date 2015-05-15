@@ -88,7 +88,7 @@ class StatisticDataCollector(metaclass=Singleton):
         """
         return datetime.now() - self.__start_time
 
-    def get_data_transfer_speed(self):
+    def get_data_receiving_speed(self):
         """
         :return: count of received bytes in last second
         :rtype: int
