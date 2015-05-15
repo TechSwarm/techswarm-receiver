@@ -32,7 +32,7 @@ class UserInterface(metaclass=Singleton):
             self.__render_frame()
 
     def __init_curses(self):
-        self.__screen = curses.initscr()  # extract self.__init_curses()
+        self.__screen = curses.initscr()
         curses.start_color()
         curses.curs_set(0)
 
@@ -40,7 +40,10 @@ class UserInterface(metaclass=Singleton):
         curses.init_pair(self.__TIMESTAMP_COLOR, curses.COLOR_RED, curses.COLOR_BLACK)
         self.__MODULE_NAME_COLOR = 2
         curses.init_pair(self.__MODULE_NAME_COLOR, curses.COLOR_BLUE, curses.COLOR_BLACK)
+        self.__INFO_BAR_DESC_COLOR = 3
+        curses.init_pair(self.__INFO_BAR_DESC_COLOR, curses.COLOR_BLACK, curses.COLOR_CYAN)
 
+        self.__logs_auto_scrolling = True
         StatisticDataCollector().get_logger().log('system', 'User interface initialized!')
 
     def __render_frame(self):
@@ -154,5 +157,13 @@ class UserInterface(metaclass=Singleton):
         window.addstr(0, 1, title)
 
     def __render_info_bar(self, window):
-        window.addstr(0, 0, 'infobar')
+        info_bar_scheme = (
+            ('F1', '{} auto scrolling'.format('Disable' if self.__logs_auto_scrolling else 'Enable')),
+            ('F2', 'Filter'),
+            ('F3', 'Exit'),
+            ('↑↓', 'Scroll')
+        )
+        for key, description in info_bar_scheme:
+            window.addstr(key)
+            window.addstr(description, curses.color_pair(self.__INFO_BAR_DESC_COLOR))
         window.refresh()
