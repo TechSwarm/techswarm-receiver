@@ -1,4 +1,5 @@
 import curses
+import os
 from threading import Thread
 from time import sleep
 
@@ -14,27 +15,21 @@ class UserInterface(metaclass=Singleton):
         self.__REFRESHING_FREQUENCY = refreshing_frequency
 
     def run(self):
-        Thread(target=self.__renderer_thread, daemon=True).start()
-        Thread(target=self.__event_handler_thread, daemon=True).start()
+        Thread(target=self.__interface_thread, daemon=True).start()
 
-    def __event_handler_thread(self):
-        # actions:
-        # - exit (curses.endwin())
-        # - filter modules
-        # - scroll logs
-        # - enable/disable auto scroll
-        pass
-
-    def __renderer_thread(self):
+    def __interface_thread(self):
         self.__init_curses()
         while True:
             sleep(1/self.__REFRESHING_FREQUENCY)
+            self.__process_events()
             self.__render_frame()
 
     def __init_curses(self):
         self.__screen = curses.initscr()
         curses.start_color()
         curses.curs_set(0)
+        self.__screen.nodelay(True)
+        self.__screen.keypad(True)
 
         self.__TIMESTAMP_COLOR = 1
         curses.init_pair(self.__TIMESTAMP_COLOR, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -42,9 +37,54 @@ class UserInterface(metaclass=Singleton):
         curses.init_pair(self.__MODULE_NAME_COLOR, curses.COLOR_BLUE, curses.COLOR_BLACK)
         self.__INFO_BAR_DESC_COLOR = 3
         curses.init_pair(self.__INFO_BAR_DESC_COLOR, curses.COLOR_BLACK, curses.COLOR_CYAN)
+        self.__FILTER_WINDOW_BACKGROUND = 4
+        curses.init_pair(self.__FILTER_WINDOW_BACKGROUND, curses.COLOR_WHITE, curses.COLOR_BLUE)
+        self.__FILTER_WINDOW_SELECTION = 5
+        curses.init_pair(self.__FILTER_WINDOW_SELECTION, curses.COLOR_BLACK, curses.COLOR_CYAN)
 
         self.__logs_auto_scrolling = True
+        self.__scroll_position = self.__auto_scroll_position = 1
+        self.__filter_window_active = False
         StatisticDataCollector().get_logger().log('system', 'User interface initialized!')
+
+    def __process_events(self):
+        while True:
+            key_code = self.__screen.getch()
+            if key_code == curses.ERR:
+                return
+            StatisticDataCollector().get_logger().log('ui', 'got key code: {}'.format(key_code))
+
+            if self.__filter_window_active:
+                self.__filter_window_process_event(key_code)
+            else:
+                self.__main_window_process_event(key_code)
+
+    def __filter_window_process_event(self, key_code):
+        if key_code == 27:  # escape
+            self.__filter_window_active = False
+        elif key_code == ord(' '):
+            pass
+        elif key_code == curses.KEY_UP:
+            pass
+        elif key_code == curses.KEY_DOWN:
+            pass
+
+    def __main_window_process_event(self, key_code):
+        if key_code == curses.KEY_F2:
+            self.__logs_auto_scrolling = not self.__logs_auto_scrolling
+        elif key_code == curses.KEY_F3:
+            self.__filter_window_active = True
+        elif key_code == curses.KEY_F9:
+            curses.endwin()
+            os.kill(os.getpid(), 15)
+        elif key_code == curses.KEY_UP:
+            self.__logs_auto_scrolling = False
+            self.__scroll_position = max(self.__scroll_position - 1, 0)
+        elif key_code == curses.KEY_DOWN:
+            if self.__scroll_position == self.__auto_scroll_position:
+                self.__logs_auto_scrolling = True
+            else:
+                self.__scroll_position += 1
 
     def __render_frame(self):
         lines, cols = self.__screen.getmaxyx()
@@ -61,6 +101,10 @@ class UserInterface(metaclass=Singleton):
         self.__render_statistics(statistics_window)
         info_bar_window = curses.newwin(1, cols, lines - 1, 0)
         self.__render_info_bar(info_bar_window)
+        if self.__filter_window_active:
+            width, height = 60, 20
+            filter_window = curses.newwin(height, width, (lines - height) // 2, (cols - width) // 2)
+            self.__render_filter_window(filter_window)
 
     def __render_logs(self, window):
         self.__draw_entitled_box(window, 'Logs')
@@ -71,6 +115,8 @@ class UserInterface(metaclass=Singleton):
         logs = StatisticDataCollector().get_logger().get_logs()
         for timestamp, module_name, message in logs:
             # TODO do logs filtering here! (continue if module_name not in filter list)
+            # TODO render only what is visible!
+            # TODO write this section from scratch! (remember about scroll position and filters!)
             timestamp_str = '{:02}:{:02}:{:02}.{:06}'.format(timestamp.hour, timestamp.minute,
                                                              timestamp.second, timestamp.microsecond)
             module_name = module_name.replace('\n', '<nl>')
@@ -93,23 +139,24 @@ class UserInterface(metaclass=Singleton):
             if len(whole_message) % pad_cols != 1:
                 pad.addstr('\n')
 
-        # show logs, TODO do scrolling here (currently implemented auto-scrolling only)
+        # show logs
         pad_cursor_y, _ = pad.getyx()
         pad_visible_lines = lines - 2
         pad_visible_cols = cols - 2
-        auto_scroll_position = max(0, pad_cursor_y - pad_visible_lines)
+        self.__auto_scroll_position = pad_cursor_y
+        if self.__logs_auto_scrolling:
+            self.__scroll_position = self.__auto_scroll_position
         beg_y, beg_x = window.getbegyx()
-        pad.refresh(auto_scroll_position, 0, beg_y + 1, beg_x + 1, beg_y + pad_visible_lines, beg_x + pad_visible_cols)
+        pad.refresh(max(0, self.__scroll_position - pad_visible_lines), 0,
+                    beg_y + 1, beg_x + 1, beg_y + pad_visible_lines, beg_x + pad_visible_cols)
 
-        #test-purposes only - create logs
+        #test-purposes only - create logs # TODO remove it
         import random
         StatisticDataCollector().get_logger().log('test', 'x'*random.randint(50, 52)+'y')
 
     def __render_statistics(self, window):
         self.__draw_entitled_box(window, 'Statistics')
-        lines, cols = window.getmaxyx()
-        beg_y, beg_x = window.getbegyx()
-        sub_win = window.subwin(lines - 2, cols - 2, beg_y + 1, beg_x + 1)
+        sub_win = self.__get_sub_window(window)
         stats_to_display = self.__prepare_stats()
         for name, value in stats_to_display:
             sub_win.addstr('{}: {}\n'.format(name, value))
@@ -157,14 +204,28 @@ class UserInterface(metaclass=Singleton):
         window.box()
         window.addstr(0, 1, title)
 
+    @staticmethod
+    def __get_sub_window(window, margin=1):
+        lines, cols = window.getmaxyx()
+        beg_y, beg_x = window.getbegyx()
+        return window.subwin(lines - margin * 2, cols - margin * 2, beg_y + margin, beg_x + margin)
+
     def __render_info_bar(self, window):
         info_bar_scheme = (
-            ('F1', '{} auto scrolling'.format('Disable' if self.__logs_auto_scrolling else 'Enable')),
-            ('F2', 'Filter'),
-            ('F3', 'Exit'),
+            ('F2', '{} auto scrolling'.format('Disable' if self.__logs_auto_scrolling else 'Enable')),
+            ('F3', 'Filter'),
+            ('F9', 'Exit'),
             ('↑↓', 'Scroll')
         )
         for key, description in info_bar_scheme:
             window.addstr(key)
             window.addstr(description, curses.color_pair(self.__INFO_BAR_DESC_COLOR))
+        window.refresh()
+
+    def __render_filter_window(self, window):
+        window.bkgd(' ', curses.color_pair(self.__FILTER_WINDOW_BACKGROUND))
+        self.__draw_entitled_box(window, 'Filter')
+        sub_win = self.__get_sub_window(window)
+        sub_win.addstr('Please use arrows, space and escape to navigate.\n')
+        # TODO implement filtering window logic
         window.refresh()
