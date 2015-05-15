@@ -45,10 +45,9 @@ def _parse_line(parsers, line):
         try:
             if parser.parse(line, *values):
                 break
-        except ValueError as err:
-            StatisticDataCollector().get_logger().log(parser.__class__.__name__, 'ValueError: {}'.format(err))
         except Exception as err:
-            StatisticDataCollector().get_logger().log(parser.__class__.__name__, 'Unknown error: {}'.format(err))
+            StatisticDataCollector().get_logger()\
+                .log(parser.__class__.__name__, '{}: {}'.format(err.__class__.__name__, err))
     else:
         error_message = 'Output line was not parsed by any parser: {}'.format(line)
         StatisticDataCollector().get_logger().log('system', error_message)

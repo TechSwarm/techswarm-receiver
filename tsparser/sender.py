@@ -46,6 +46,7 @@ def _send_data(data, url):
     try:
         response = requests.post(url, data=data,
                                  auth=(config.USERNAME, config.PASSWORD))
-    except requests.HTTPError:
+    except Exception as err:
+        StatisticDataCollector().get_logger().log('sender', '{}: {}'.format(err.__class__.__name__, err))
         return False
     return response.status_code == 201
