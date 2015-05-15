@@ -22,7 +22,7 @@ class UserInterface(metaclass=Singleton):
         # - exit (curses.endwin())
         # - filter modules
         # - scroll logs
-        # - enable/disable autoscroll
+        # - enable/disable auto scroll
         pass
 
     def __renderer_thread(self):
@@ -97,26 +97,26 @@ class UserInterface(metaclass=Singleton):
         pad_cursor_y, _ = pad.getyx()
         pad_visible_lines = lines - 2
         pad_visible_cols = cols - 2
-        autoscroll_position = max(0, pad_cursor_y - pad_visible_lines)
+        auto_scroll_position = max(0, pad_cursor_y - pad_visible_lines)
         beg_y, beg_x = window.getbegyx()
-        pad.refresh(autoscroll_position, 0, beg_y + 1, beg_x + 1, beg_y + pad_visible_lines, beg_x + pad_visible_cols)
+        pad.refresh(auto_scroll_position, 0, beg_y + 1, beg_x + 1, beg_y + pad_visible_lines, beg_x + pad_visible_cols)
 
         #test-purposes only - create logs
         import random
-        StatisticDataCollector().get_logger().log('test', 'x'*random.randint(50,52)+'y')
-
+        StatisticDataCollector().get_logger().log('test', 'x'*random.randint(50, 52)+'y')
 
     def __render_statistics(self, window):
         self.__draw_entitled_box(window, 'Statistics')
         lines, cols = window.getmaxyx()
         beg_y, beg_x = window.getbegyx()
-        subwin = window.subwin(lines - 2, cols - 2, beg_y + 1, beg_x + 1)
+        sub_win = window.subwin(lines - 2, cols - 2, beg_y + 1, beg_x + 1)
         stats_to_display = self.__prepare_stats()
         for name, value in stats_to_display:
-            subwin.addstr('{}: {}\n'.format(name, value))
+            sub_win.addstr('{}: {}\n'.format(name, value))
         window.refresh()
 
-    def __prepare_stats(self):
+    @staticmethod
+    def __prepare_stats():
         def timedelta_to_str(timedelta_obj):
             seconds = timedelta_obj.total_seconds()
             if seconds < 1:
@@ -152,7 +152,8 @@ class UserInterface(metaclass=Singleton):
         )
         return stats_scheme
 
-    def __draw_entitled_box(self, window, title):
+    @staticmethod
+    def __draw_entitled_box(window, title):
         window.box()
         window.addstr(0, 1, title)
 
