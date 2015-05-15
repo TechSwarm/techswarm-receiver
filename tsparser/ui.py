@@ -105,7 +105,49 @@ class UserInterface(metaclass=Singleton):
 
     def __render_statistics(self, window):
         self.__draw_entitled_box(window, 'Statistics')
+        lines, cols = window.getmaxyx()
+        beg_y, beg_x = window.getbegyx()
+        subwin = window.subwin(lines - 2, cols - 2, beg_y + 1, beg_x + 1)
+        stats_to_display = self.__prepare_stats()
+        for name, value in stats_to_display:
+            subwin.addstr('{}: {}\n'.format(name, value))
         window.refresh()
+
+    def __prepare_stats(self):
+        def timedelta_to_str(timedelta_obj):
+            seconds = timedelta_obj.total_seconds()
+            if seconds < 1:
+                return '<1 sec'
+            seconds = int(seconds)
+            result = '{} sec'.format(seconds % 60)
+            if seconds >= 60:
+                result = '{} min {}'.format(seconds // 60, result)
+            return result
+
+        def data_amount_to_str(data_amount):
+            steps = (
+                (1, 'B'),
+                (10**3, 'kB'),
+                (10**6, 'MB'),
+                (10**9, 'GB')
+            )
+            last_good_result = '0 B'
+            for bound, unit in steps:
+                if data_amount < bound:
+                    return last_good_result
+                last_good_result = '{:.3f} {}'.format(data_amount / bound, unit)
+            return last_good_result
+
+        sdc = StatisticDataCollector()
+        stats_scheme = (
+            ('Time since last receiving', timedelta_to_str(sdc.get_time_since_last_data_receiving())),
+            ('Time since start', timedelta_to_str(sdc.get_time_since_start())),
+            ('Data receiving speed', data_amount_to_str(sdc.get_data_receiving_speed())+'/s'),
+            ('Total data received', data_amount_to_str(sdc.get_total_data_received())),
+            ('Queued requests', str(sdc.get_count_of_queued_requests())),
+            ('Total sent requests', str(sdc.get_total_count_of_sent_requests()))
+        )
+        return stats_scheme
 
     def __draw_entitled_box(self, window, title):
         window.box()
