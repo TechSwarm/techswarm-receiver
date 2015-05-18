@@ -32,6 +32,7 @@ class UserInterface(metaclass=Singleton):
         curses.curs_set(0)
         self.__screen.nodelay(True)
         self.__screen.keypad(True)
+        self.__SCREEN_MINIMAL_SIZE = 24, 80  # lines, cols
 
         self.__TIMESTAMP_COLOR = 1
         curses.init_pair(self.__TIMESTAMP_COLOR, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -100,9 +101,10 @@ class UserInterface(metaclass=Singleton):
 
     def __render_frame(self):
         lines, cols = self.__screen.getmaxyx()
-        if lines < 25 or cols < 80:  # TODO change to 80x24 and make it a variable!
+        min_lines, min_cols = self.__SCREEN_MINIMAL_SIZE
+        if lines < min_lines or cols < min_cols:
             self.__screen.clear()
-            self.__screen.addstr('Terminal size should be at least 80x25!\n')
+            self.__screen.addstr('Terminal size should be at least {}x{}!\n'.format(min_cols, min_lines))
             self.__screen.refresh()
             return
         statistics_window_width = 40
