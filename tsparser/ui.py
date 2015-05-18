@@ -2,6 +2,7 @@ import curses
 import os
 from threading import Thread
 from time import sleep
+import _curses
 
 from tsparser.utils import Singleton, StatisticDataCollector
 
@@ -11,7 +12,8 @@ class UserInterface(metaclass=Singleton):
     User Interface is a singleton. Once ran, it renders UI until exiting the app.
     """
 
-    def __init__(self, refreshing_frequency=1):
+    def __init__(self, refreshing_frequency=10):
+        # TODO consider boosting refreshing_frequency when filter window is active
         self.__REFRESHING_FREQUENCY = refreshing_frequency
 
     def run(self):
@@ -45,6 +47,9 @@ class UserInterface(metaclass=Singleton):
         self.__logs_auto_scrolling = True
         self.__scroll_position = self.__auto_scroll_position = 1
         self.__filter_window_active = False
+        self.__filter = dict()
+        self.__filter_selected_index = int()
+        self.__filter_selected_module = str()
         StatisticDataCollector().get_logger().log('system', 'User interface initialized!')
 
     def __process_events(self):
@@ -63,17 +68,24 @@ class UserInterface(metaclass=Singleton):
         if key_code == 27:  # escape
             self.__filter_window_active = False
         elif key_code == ord(' '):
-            pass
+            if self.__filter:
+                self.__filter[self.__filter_selected_module] = not self.__filter[self.__filter_selected_module]
         elif key_code == curses.KEY_UP:
-            pass
+            self.__filter_selected_index -= 1
+            if self.__filter_selected_index == -1:
+                self.__filter_selected_index = len(self.__filter) - 1
         elif key_code == curses.KEY_DOWN:
-            pass
+            self.__filter_selected_index += 1
+            if self.__filter_selected_index == len(self.__filter):
+                self.__filter_selected_index = 0
+
 
     def __main_window_process_event(self, key_code):
         if key_code == curses.KEY_F2:
             self.__logs_auto_scrolling = not self.__logs_auto_scrolling
         elif key_code == curses.KEY_F3:
             self.__filter_window_active = True
+            self.__filter_selected_index = 0
         elif key_code == curses.KEY_F9:
             curses.endwin()
             os.kill(os.getpid(), 15)
@@ -88,7 +100,7 @@ class UserInterface(metaclass=Singleton):
 
     def __render_frame(self):
         lines, cols = self.__screen.getmaxyx()
-        if lines < 25 or cols < 80:
+        if lines < 25 or cols < 80:  # TODO change to 80x24 and make it a variable!
             self.__screen.clear()
             self.__screen.addstr('Terminal size should be at least 80x25!\n')
             self.__screen.refresh()
@@ -114,7 +126,8 @@ class UserInterface(metaclass=Singleton):
         pad = curses.newpad(lines - 2, cols - 2)
         logs = StatisticDataCollector().get_logger().get_logs()
         for timestamp, module_name, message in logs:
-            # TODO do logs filtering here! (continue if module_name not in filter list)
+            if module_name in self.__filter and self.__filter[module_name] == False:
+                continue
             # TODO render only what is visible!
             # TODO write this section from scratch! (remember about scroll position and filters!)
             timestamp_str = '{:02}:{:02}:{:02}.{:06}'.format(timestamp.hour, timestamp.minute,
@@ -226,6 +239,34 @@ class UserInterface(metaclass=Singleton):
         window.bkgd(' ', curses.color_pair(self.__FILTER_WINDOW_BACKGROUND))
         self.__draw_entitled_box(window, 'Filter')
         sub_win = self.__get_sub_window(window)
-        sub_win.addstr('Please use arrows, space and escape to navigate.\n')
-        # TODO implement filtering window logic
+        sub_win.addstr('Please use arrows, space and escape to navigate.\n\n')
+        self.__update_filter()
+        self.__render_filter_list(sub_win)
         window.refresh()
+
+    def __update_filter(self):
+        for module_name in StatisticDataCollector().get_logger().get_all_modules():
+            if module_name not in self.__filter:
+                self.__filter[module_name] = True
+
+    def __render_filter_list(self, window):
+        lines, cols = window.getmaxyx()
+        loop_cnt = 0
+        for module_name, is_checked in self.__filter.items():
+            color = self.__FILTER_WINDOW_BACKGROUND
+            is_entry_selected = self.__filter_selected_index == loop_cnt
+            if is_entry_selected:
+                color = self.__FILTER_WINDOW_SELECTION
+                self.__filter_selected_module = module_name
+
+            prefix = '[x] ' if is_checked else '[ ] '
+            module_name_needed_length = cols - len(prefix)
+            if len(module_name) > module_name_needed_length:
+                module_name = module_name[:module_name_needed_length-3] + '...'
+            else:
+                module_name += ' ' * (module_name_needed_length - len(module_name))
+            try:  # TODO if there are many modules (False on May 18th, 2015), implement scrolling for this window
+                window.addstr(prefix + module_name, curses.color_pair(color))
+            except _curses.error:
+                break
+            loop_cnt += 1
