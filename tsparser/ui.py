@@ -1,8 +1,9 @@
-import curses
+import _curses, curses
+from bisect import bisect_left
+import math
 import os
 from threading import Thread
 from time import sleep
-import _curses
 
 from tsparser.utils import Singleton, StatisticDataCollector
 
@@ -23,6 +24,7 @@ class UserInterface(metaclass=Singleton):
         self.__init_curses()
         while True:
             sleep(1/self.__REFRESHING_FREQUENCY)
+            self.__update_filter()
             self.__process_events()
             self.__render_frame()
 
@@ -46,12 +48,19 @@ class UserInterface(metaclass=Singleton):
         curses.init_pair(self.__FILTER_WINDOW_SELECTION, curses.COLOR_BLACK, curses.COLOR_CYAN)
 
         self.__logs_auto_scrolling = True
-        self.__scroll_position = self.__auto_scroll_position = 1
+        self.__scroll_position = 0
+        self.__log_index_to_last_line_no = list()
+        self.__cached_processed_logs = list()
         self.__filter_window_active = False
         self.__filter = dict()
         self.__filter_selected_index = int()
         self.__filter_selected_module = str()
         StatisticDataCollector().get_logger().log('system', 'User interface initialized!')
+
+    def __update_filter(self):
+        for module_name in StatisticDataCollector().get_logger().get_all_modules():
+            if module_name not in self.__filter:
+                self.__filter[module_name] = True
 
     def __process_events(self):
         while True:
@@ -59,11 +68,18 @@ class UserInterface(metaclass=Singleton):
             if key_code == curses.ERR:
                 return
             StatisticDataCollector().get_logger().log('ui', 'got key code: {}'.format(key_code))
+            if key_code == curses.KEY_RESIZE:
+                self.__delete_cached_logs()
+                continue
 
             if self.__filter_window_active:
                 self.__filter_window_process_event(key_code)
             else:
                 self.__main_window_process_event(key_code)
+
+    def __delete_cached_logs(self):
+        self.__cached_processed_logs.clear()
+        self.__log_index_to_last_line_no.clear()
 
     def __filter_window_process_event(self, key_code):
         if key_code == 27:  # escape
@@ -71,6 +87,8 @@ class UserInterface(metaclass=Singleton):
         elif key_code == ord(' '):
             if self.__filter:
                 self.__filter[self.__filter_selected_module] = not self.__filter[self.__filter_selected_module]
+                self.__auto_scroll_position = True
+                self.__delete_cached_logs()
         elif key_code == curses.KEY_UP:
             self.__filter_selected_index -= 1
             if self.__filter_selected_index == -1:
@@ -79,7 +97,6 @@ class UserInterface(metaclass=Singleton):
             self.__filter_selected_index += 1
             if self.__filter_selected_index == len(self.__filter):
                 self.__filter_selected_index = 0
-
 
     def __main_window_process_event(self, key_code):
         if key_code == curses.KEY_F2:
@@ -92,12 +109,14 @@ class UserInterface(metaclass=Singleton):
             os.kill(os.getpid(), 15)
         elif key_code == curses.KEY_UP:
             self.__logs_auto_scrolling = False
-            self.__scroll_position = max(self.__scroll_position - 1, 0)
+            self.__scroll_position -= 1  # renderer will increase value if it is too small
         elif key_code == curses.KEY_DOWN:
-            if self.__scroll_position == self.__auto_scroll_position:
-                self.__logs_auto_scrolling = True
-            else:
-                self.__scroll_position += 1
+            if self.__cached_processed_logs:
+                if self.__scroll_position >= self.__log_index_to_last_line_no[-1]:
+                    self.__logs_auto_scrolling = True
+                else:
+                    self.__scroll_position += 1
+        # TODO add "clear logs"
 
     def __render_frame(self):
         lines, cols = self.__screen.getmaxyx()
@@ -109,10 +128,11 @@ class UserInterface(metaclass=Singleton):
             return
         statistics_window_width = 40
 
+        # TODO consider creating one window and many sub windows
         logs_windows = curses.newwin(lines - 1, cols - statistics_window_width, 0, 0)
-        self.__render_logs(logs_windows)
+        self.__render_logs_window(logs_windows)
         statistics_window = curses.newwin(lines - 1, statistics_window_width, 0, cols - statistics_window_width)
-        self.__render_statistics(statistics_window)
+        self.__render_statistics_window(statistics_window)
         info_bar_window = curses.newwin(1, cols, lines - 1, 0)
         self.__render_info_bar(info_bar_window)
         if self.__filter_window_active:
@@ -120,56 +140,93 @@ class UserInterface(metaclass=Singleton):
             filter_window = curses.newwin(height, width, (lines - height) // 2, (cols - width) // 2)
             self.__render_filter_window(filter_window)
 
-    def __render_logs(self, window):
+    def __render_logs_window(self, window):
         self.__draw_entitled_box(window, 'Logs')
+
+        sub_win = self.__get_sub_window(window)
+        lines, cols = sub_win.getmaxyx()
+        selected_modules = [module_name for module_name in self.__filter if self.__filter[module_name]]
+        logs = StatisticDataCollector().get_logger().get_logs(selected_modules)
+        new_logs = logs[len(self.__cached_processed_logs):]
+        self.__cache_new_log_entries(new_logs, cols)
+        self.__render_visible_log_entries(sub_win)
         window.refresh()
 
-        lines, cols = window.getmaxyx()
-        pad = curses.newpad(lines - 2, cols - 2)
-        logs = StatisticDataCollector().get_logger().get_logs()
-        for timestamp, module_name, message in logs:
-            if module_name in self.__filter and self.__filter[module_name] == False:
-                continue
-            # TODO render only what is visible!
-            # TODO write this section from scratch! (remember about scroll position and filters!)
+        #test-purposes only - create logs # TODO remove it
+        #import random
+        #StatisticDataCollector().get_logger().log('test', 'x'*random.randint(50, 52)+'y')
+
+    def __cache_new_log_entries(self, new_entries, line_width):
+        for timestamp, module_name, message in new_entries:
             timestamp_str = '{:02}:{:02}:{:02}.{:06}'.format(timestamp.hour, timestamp.minute,
                                                              timestamp.second, timestamp.microsecond)
-            module_name = module_name.replace('\n', '<nl>')
-            message = message.replace('\n', '<nl>')
+            module_name = module_name.replace('\n', '<nl> ')
+            message = message.replace('\n', '<nl> ')
+            self.__cached_processed_logs.append((timestamp_str, module_name, message))
+            whole_message = timestamp_str + ' ' + module_name + ' ' + message
+            lines_needed = math.ceil(len(whole_message) / line_width)
+            previous_entry_last_line = self.__log_index_to_last_line_no[-1] if self.__log_index_to_last_line_no else -1
+            self.__log_index_to_last_line_no.append(previous_entry_last_line + lines_needed)
 
-            # resizing pad if needed
-            pad_lines, pad_cols = pad.getmaxyx()
-            whole_message = timestamp_str + ' ' + module_name + ' ' + message + '\n'
-            lines_needed = len(whole_message) // pad_cols + 1
-            cursor_y, cursor_x = pad.getyx()
-            lines_left = pad_lines - cursor_y
-            if lines_left < lines_needed + 1:
-                pad.resize((pad_lines + lines_needed) * 2, pad_cols)
-                pad.move(cursor_y, cursor_x)
-
-            # render line
-            pad.addstr(timestamp_str+' ', curses.color_pair(self.__TIMESTAMP_COLOR))
-            pad.addstr(module_name+' ', curses.color_pair(self.__MODULE_NAME_COLOR))
-            pad.addstr(message)
-            if len(whole_message) % pad_cols != 1:
-                pad.addstr('\n')
-
-        # show logs
-        pad_cursor_y, _ = pad.getyx()
-        pad_visible_lines = lines - 2
-        pad_visible_cols = cols - 2
-        self.__auto_scroll_position = pad_cursor_y
+    def __render_visible_log_entries(self, window):
+        if not self.__cached_processed_logs:
+            return
+        lines, cols = window.getmaxyx()
+        lines -= 1  # last line should be empty (cursor will be there)
+                    # otherwise cursor will land below the window (what causes curses error)
         if self.__logs_auto_scrolling:
-            self.__scroll_position = self.__auto_scroll_position
-        beg_y, beg_x = window.getbegyx()
-        pad.refresh(max(0, self.__scroll_position - pad_visible_lines), 0,
-                    beg_y + 1, beg_x + 1, beg_y + pad_visible_lines, beg_x + pad_visible_cols)
+            self.__scroll_position = self.__log_index_to_last_line_no[-1]
+        self.__scroll_position = max(self.__scroll_position, lines - 1)
+        first_line_no = max(0, self.__scroll_position - lines + 1)
+        first_log_entry_index = bisect_left(self.__log_index_to_last_line_no, first_line_no)
+        log_entry_index = first_log_entry_index
+        while log_entry_index < len(self.__cached_processed_logs):
+            last_entry_line_no = self.__log_index_to_last_line_no[log_entry_index]
+            first_entry_line_no = self.__log_index_to_last_line_no[log_entry_index-1] + 1 if log_entry_index > 0 else 0
+            self.__render_log_entry(window, log_entry_index,
+                                    max(0, first_line_no - first_entry_line_no),
+                                    max(0, last_entry_line_no - self.__scroll_position))
 
-        #test-purposes only - create logs # TODO remove it
-        import random
-        StatisticDataCollector().get_logger().log('test', 'x'*random.randint(50, 52)+'y')
+            log_entry_index += 1
+            if last_entry_line_no >= self.__scroll_position:
+                break
 
-    def __render_statistics(self, window):
+        if self.__scroll_position >= self.__log_index_to_last_line_no[-1]:
+            info_message = '(end)'
+        else:
+            left_lines_count = self.__log_index_to_last_line_no[-1] - self.__scroll_position
+            left_lines_count = str(left_lines_count) if left_lines_count < 10**9 else '>=10e9'
+            info_message = '({} more lines)'.format(left_lines_count)
+        window.addstr(lines, 0, info_message, curses.A_DIM)
+
+    def __render_log_entry(self, window, log_entry_index, omitted_first_lines, omitted_last_lines):
+        lines, cols = window.getmaxyx()
+        timestamp_str, module_name, message = self.__cached_processed_logs[log_entry_index]
+        colored_prefix = timestamp_str + ' ' + module_name + ' '
+        whole_message = colored_prefix + message
+        entry_lines = list()
+        while len(whole_message) > 0:
+            split_point = min(cols, len(whole_message))
+            entry_lines.append(whole_message[:split_point])
+            whole_message = whole_message[split_point:]
+        if len(entry_lines[-1]) < cols:
+            entry_lines[-1] += '\n'
+        if omitted_first_lines + omitted_last_lines > len(entry_lines):
+            return
+
+        if omitted_first_lines == 0:
+            if len(colored_prefix) <= cols:
+                rest_of_first_line = entry_lines[0][len(colored_prefix):]
+                window.addstr(timestamp_str + ' ', curses.color_pair(self.__TIMESTAMP_COLOR))
+                window.addstr(module_name + ' ', curses.color_pair(self.__MODULE_NAME_COLOR))
+                window.addstr(rest_of_first_line)
+            else:
+                window.addstr(entry_lines[0])
+        entry_lines = entry_lines[max(1, omitted_first_lines):len(entry_lines)-omitted_last_lines]
+        for line in entry_lines:
+            window.addstr(line)
+
+    def __render_statistics_window(self, window):
         self.__draw_entitled_box(window, 'Statistics')
         sub_win = self.__get_sub_window(window)
         stats_to_display = self.__prepare_stats()
@@ -242,14 +299,8 @@ class UserInterface(metaclass=Singleton):
         self.__draw_entitled_box(window, 'Filter')
         sub_win = self.__get_sub_window(window)
         sub_win.addstr('Please use arrows, space and escape to navigate.\n\n')
-        self.__update_filter()
         self.__render_filter_list(sub_win)
         window.refresh()
-
-    def __update_filter(self):
-        for module_name in StatisticDataCollector().get_logger().get_all_modules():
-            if module_name not in self.__filter:
-                self.__filter[module_name] = True
 
     def __render_filter_list(self, window):
         lines, cols = window.getmaxyx()
