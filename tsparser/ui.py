@@ -66,7 +66,6 @@ class UserInterface(metaclass=Singleton):
             key_code = self.__screen.getch()
             if key_code == curses.ERR:
                 return
-            StatisticDataCollector().get_logger().log('ui', 'got key code: {}'.format(key_code))
             if key_code == curses.KEY_RESIZE:
                 self.__delete_cached_logs()
                 continue
@@ -150,10 +149,6 @@ class UserInterface(metaclass=Singleton):
         new_logs = logs[len(self.__cached_processed_logs):]
         self.__cache_new_log_entries(new_logs, cols)
         self.__render_visible_log_entries(sub_win)
-
-        #test-purposes only - create logs # TODO remove it
-        #import random
-        #StatisticDataCollector().get_logger().log('test', 'x'*random.randint(50, 52)+'y')
 
     def __cache_new_log_entries(self, new_entries, line_width):
         for timestamp, module_name, message in new_entries:
