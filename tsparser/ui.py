@@ -14,7 +14,6 @@ class UserInterface(metaclass=Singleton):
     """
 
     def __init__(self, refreshing_frequency=10):
-        # TODO consider boosting refreshing_frequency when filter window is active
         self.__REFRESHING_FREQUENCY = refreshing_frequency
 
     def run(self):
@@ -128,19 +127,20 @@ class UserInterface(metaclass=Singleton):
             return
         statistics_window_width = 40
 
-        # TODO consider creating one window and many sub windows
-        logs_windows = curses.newwin(lines - 1, cols - statistics_window_width, 0, 0)
+        logs_windows = self.__screen.subwin(lines - 1, cols - statistics_window_width, 0, 0)
         self.__render_logs_window(logs_windows)
-        statistics_window = curses.newwin(lines - 1, statistics_window_width, 0, cols - statistics_window_width)
+        statistics_window = self.__screen.subwin(lines - 1, statistics_window_width, 0, cols - statistics_window_width)
         self.__render_statistics_window(statistics_window)
-        info_bar_window = curses.newwin(1, cols, lines - 1, 0)
+        info_bar_window = self.__screen.subwin(1, cols, lines - 1, 0)
         self.__render_info_bar(info_bar_window)
         if self.__filter_window_active:
             width, height = 60, 20
-            filter_window = curses.newwin(height, width, (lines - height) // 2, (cols - width) // 2)
+            filter_window = self.__screen.subwin(height, width, (lines - height) // 2, (cols - width) // 2)
             self.__render_filter_window(filter_window)
+        self.__screen.refresh()
 
     def __render_logs_window(self, window):
+        window.clear()
         self.__draw_entitled_box(window, 'Logs')
 
         sub_win = self.__get_sub_window(window)
@@ -150,7 +150,6 @@ class UserInterface(metaclass=Singleton):
         new_logs = logs[len(self.__cached_processed_logs):]
         self.__cache_new_log_entries(new_logs, cols)
         self.__render_visible_log_entries(sub_win)
-        window.refresh()
 
         #test-purposes only - create logs # TODO remove it
         #import random
@@ -227,12 +226,12 @@ class UserInterface(metaclass=Singleton):
             window.addstr(line)
 
     def __render_statistics_window(self, window):
+        window.clear()
         self.__draw_entitled_box(window, 'Statistics')
         sub_win = self.__get_sub_window(window)
         stats_to_display = self.__prepare_stats()
         for name, value in stats_to_display:
             sub_win.addstr('{}: {}\n'.format(name, value))
-        window.refresh()
 
     @staticmethod
     def __prepare_stats():
@@ -283,6 +282,7 @@ class UserInterface(metaclass=Singleton):
         return window.subwin(lines - margin * 2, cols - margin * 2, beg_y + margin, beg_x + margin)
 
     def __render_info_bar(self, window):
+        window.clear()
         info_bar_scheme = (
             ('F2', '{} auto scrolling'.format('Disable' if self.__logs_auto_scrolling else 'Enable')),
             ('F3', 'Filter'),
@@ -292,15 +292,14 @@ class UserInterface(metaclass=Singleton):
         for key, description in info_bar_scheme:
             window.addstr(key)
             window.addstr(description, curses.color_pair(self.__INFO_BAR_DESC_COLOR))
-        window.refresh()
 
     def __render_filter_window(self, window):
+        window.clear()
         window.bkgd(' ', curses.color_pair(self.__FILTER_WINDOW_BACKGROUND))
         self.__draw_entitled_box(window, 'Filter')
         sub_win = self.__get_sub_window(window)
         sub_win.addstr('Please use arrows, space and escape to navigate.\n\n')
         self.__render_filter_list(sub_win)
-        window.refresh()
 
     def __render_filter_list(self, window):
         lines, cols = window.getmaxyx()
