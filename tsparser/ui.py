@@ -166,11 +166,12 @@ class UserInterface(metaclass=Singleton):
             self.__log_index_to_last_line_no.append(previous_entry_last_line + lines_needed)
 
     def __render_visible_log_entries(self, window):
-        if not self.__cached_processed_logs:
-            return
         lines, cols = window.getmaxyx()
         lines -= 1  # last line should be empty (cursor will be there)
                     # otherwise cursor will land below the window (what causes curses error)
+        if not self.__cached_processed_logs:
+            window.addstr(lines, 0, '(no logs)', curses.A_DIM)
+            return
         if self.__logs_auto_scrolling:
             self.__scroll_position = self.__log_index_to_last_line_no[-1]
         self.__scroll_position = max(self.__scroll_position, lines - 1)
