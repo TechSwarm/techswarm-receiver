@@ -102,6 +102,9 @@ class UserInterface(metaclass=Singleton):
         elif key_code == curses.KEY_F3:
             self.__filter_window_active = True
             self.__filter_selected_index = 0
+        elif key_code == curses.KEY_F4:
+            StatisticDataCollector().get_logger().clear_logs()
+            self.__delete_cached_logs()
         elif key_code == curses.KEY_F9:
             curses.endwin()
             os.kill(os.getpid(), 15)
@@ -281,6 +284,7 @@ class UserInterface(metaclass=Singleton):
         info_bar_scheme = (
             ('F2', '{} auto scrolling'.format('Disable' if self.__logs_auto_scrolling else 'Enable')),
             ('F3', 'Filter'),
+            ('F4', 'Clear'),
             ('F9', 'Exit'),
             ('↑↓', 'Scroll')
         )
