@@ -117,8 +117,7 @@ class UserInterface(metaclass=Singleton):
                     self.__logs_auto_scrolling = True
                 else:
                     self.__scroll_position += 1
-        # TODO add "clear logs"
-
+        
     def __render_frame(self):
         lines, cols = self.__screen.getmaxyx()
         min_lines, min_cols = self.__SCREEN_MINIMAL_SIZE
