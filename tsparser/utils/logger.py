@@ -65,6 +65,15 @@ class Logger:
         self.__data_mutex.release()
         return modules_names
 
+    def clear_logs(self):
+        """
+        Clears internal log buffer releasing occupied memory. Logs saved on disk are kept.
+        """
+        self.__data_mutex.acquire()
+        self.__logs.clear()
+        self.__modules_names.clear()
+        self.__data_mutex.release()
+
     def __save_log_entry_to_file(self, log_entry):
         if self.__logfile_handle is None:
             return
