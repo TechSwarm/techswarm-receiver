@@ -13,7 +13,7 @@ class UserInterface(metaclass=Singleton):
     User Interface is a singleton. Once ran, it renders UI until exiting the app.
     """
 
-    def __init__(self, refreshing_frequency=10):
+    def __init__(self, refreshing_frequency=30):
         self.__REFRESHING_FREQUENCY = refreshing_frequency
 
     def run(self):
