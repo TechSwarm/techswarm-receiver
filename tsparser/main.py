@@ -4,6 +4,7 @@ from tsparser import config
 from tsparser.parser import BaseParser
 from tsparser.parser.gps import GPSParser
 from tsparser.parser.imu import IMUParser
+from tsparser.parser.photo import PhotoParser
 from tsparser.sender import Sender
 from tsparser.utils import StatisticDataCollector
 
@@ -33,7 +34,8 @@ def parse(input_file=None):
 def _get_parsers():
     return [
         IMUParser(),
-        GPSParser()
+        GPSParser(),
+        PhotoParser()
     ]
 
 
