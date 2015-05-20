@@ -81,3 +81,4 @@ class Logger:
         module_name = log_entry[1]
         message = log_entry[2]
         self.__logfile_handle.write('{}|{}|{}\n'.format(timestamp, module_name, message))
+        self.__logfile_handle.flush()
