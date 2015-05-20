@@ -20,7 +20,7 @@ def parse(input_file=None):
     StatisticDataCollector().get_logger().log('system', 'System has started!')
     Sender(daemon=True).start()
     if input_file is None:
-        input_file = open(config.PIPE_NAME, 'r')
+        input_file = open(config.RAW_DATA_FILENAME, 'r')
 
     parsers = _get_parsers()
     while True:

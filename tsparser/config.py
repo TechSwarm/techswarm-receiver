@@ -1,5 +1,5 @@
-# Name of FIFO which is used by USART reciver and parser to communicate over
-PIPE_NAME = 'fifo01'
+# Name of file, which contain raw data from receiver
+RAW_DATA_FILENAME = 'raw_data'
 # Username and password required to perform POST requests
 USERNAME = 'client'
 PASSWORD = 'secret'

@@ -6,6 +6,7 @@ class Usart:
         try:
             return input()
         except:
-            pass
+            while True:
+                pass
         # for test only
         # todo: replace with real usart receiving
