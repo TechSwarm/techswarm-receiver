@@ -31,8 +31,8 @@ class Logger:
         :type message: str
         """
         log_entry = (datetime.now(), module_name, message)
-        self.__save_log_entry_to_file(log_entry)
         self.__data_mutex.acquire()
+        self.__save_log_entry_to_file(log_entry)
         self.__logs.append(log_entry)
         self.__modules_names.add(module_name)
         self.__data_mutex.release()
