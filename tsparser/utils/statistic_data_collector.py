@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from threading import Lock
 
 from tsparser import config
@@ -94,7 +94,10 @@ class StatisticDataCollector(metaclass=Singleton):
         :rtype: int
         """
         self.__data_mutex.acquire()
-        data_transfer_speed = self.__bytes_received_last_second
+        if datetime.now() - self.__last_data_time <= timedelta(seconds=1):
+            data_transfer_speed = self.__bytes_received_last_second
+        else:
+            data_transfer_speed = 0
         self.__data_mutex.release()
         return data_transfer_speed
 
