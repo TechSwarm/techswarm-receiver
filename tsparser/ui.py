@@ -20,12 +20,19 @@ class UserInterface(metaclass=Singleton):
         Thread(target=self.__interface_thread, daemon=True).start()
 
     def __interface_thread(self):
-        self.__init_curses()
-        while True:
-            sleep(1/self.__REFRESHING_FREQUENCY)
-            self.__update_filter()
-            self.__process_events()
-            self.__render_frame()
+        try:
+            self.__init_curses()
+            while True:
+                sleep(1/self.__REFRESHING_FREQUENCY)
+                self.__update_filter()
+                self.__process_events()
+                self.__render_frame()
+        except Exception as err:
+            self.__screen.clear()
+            error_message = '{}: {}'.format(err.__class__.__name__, err)
+            self.__screen.addstr(error_message)
+            StatisticDataCollector().get_logger().log('ui', error_message)
+            self.__screen.refresh()
 
     def __init_curses(self):
         self.__screen = curses.initscr()
@@ -54,7 +61,7 @@ class UserInterface(metaclass=Singleton):
         self.__filter = dict()
         self.__filter_selected_index = int()
         self.__filter_selected_module = str()
-        StatisticDataCollector().get_logger().log('system', 'User interface initialized!')
+        StatisticDataCollector().get_logger().log('ui', 'User interface initialized!')
 
     def __update_filter(self):
         for module_name in StatisticDataCollector().get_logger().get_all_modules():
@@ -157,10 +164,13 @@ class UserInterface(metaclass=Singleton):
             timestamp_str = '{:02}:{:02}:{:02}.{:06}'.format(timestamp.hour, timestamp.minute,
                                                              timestamp.second, timestamp.microsecond)
             module_name = module_name.replace('\n', '<nl> ')
-            message = message.replace('\n', '<nl> ')
             self.__cached_processed_logs.append((timestamp_str, module_name, message))
             whole_message = timestamp_str + ' ' + module_name + ' ' + message
-            lines_needed = math.ceil(len(whole_message) / line_width)
+            lines_needed = 0
+            for pseudo_line in whole_message.split('\n')[:-1]:
+                pseudo_line += '\n'
+                lines_needed += math.ceil(len(pseudo_line) / line_width)
+            lines_needed += math.ceil(len(whole_message.split('\n')[-1]) / line_width)
             previous_entry_last_line = self.__log_index_to_last_line_no[-1] if self.__log_index_to_last_line_no else -1
             self.__log_index_to_last_line_no.append(previous_entry_last_line + lines_needed)
 
@@ -203,12 +213,15 @@ class UserInterface(metaclass=Singleton):
         whole_message = colored_prefix + message
         entry_lines = list()
         while len(whole_message) > 0:
-            split_point = min(cols, len(whole_message))
+            next_new_line = whole_message.find('\n') + 1
+            if next_new_line == 0:
+                next_new_line = cols
+            split_point = min(cols, len(whole_message), next_new_line)
             entry_lines.append(whole_message[:split_point])
             whole_message = whole_message[split_point:]
-        if len(entry_lines[-1]) < cols:
-            entry_lines[-1] += '\n'
-        if omitted_first_lines + omitted_last_lines > len(entry_lines):
+            if len(entry_lines[-1]) < cols and not entry_lines[-1].endswith('\n'):
+                    entry_lines[-1] += '\n'
+        if omitted_first_lines + omitted_last_lines >= len(entry_lines):
             return
 
         if omitted_first_lines == 0:
