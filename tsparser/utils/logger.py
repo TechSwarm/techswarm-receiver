@@ -1,7 +1,7 @@
 from threading import Lock
 from datetime import datetime
 
-from tsparser.timestamp import DT_FORMAT
+DT_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 
 class Logger:
