@@ -1,5 +1,5 @@
 from tsparser.parser import BaseParser
-from tsparser import config, sender
+from tsparser import config, sender, planetarydata
 
 
 class IMUParser(BaseParser):
@@ -25,7 +25,9 @@ class IMUParser(BaseParser):
                 return False
 
         if all([self.gyro, self.accel, self.magnet, self.pressure]):
-            sender.send_data(self.generate_data(), IMUParser.url)
+            data = self.generate_data()
+            sender.send_data(data, IMUParser.url)
+            planetarydata.Calculator().on_data_update(IMUParser, data)
             self.gyro = self.accel = self.magnet = self.pressure = None
 
         return True

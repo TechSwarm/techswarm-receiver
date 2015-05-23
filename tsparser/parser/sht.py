@@ -1,5 +1,5 @@
 from tsparser.parser import BaseParser
-from tsparser import config, sender
+from tsparser import config, sender, planetarydata
 
 
 class SHTParser(BaseParser):
@@ -16,4 +16,5 @@ class SHTParser(BaseParser):
             'humidity': 43.5
         }
         sender.send_data(fake_data, SHTParser.url)
+        planetarydata.Calculator().on_data_update(SHTParser, fake_data)
         return True

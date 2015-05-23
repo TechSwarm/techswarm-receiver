@@ -1,5 +1,5 @@
 from tsparser.parser import BaseParser
-from tsparser import config, sender
+from tsparser import config, sender, planetarydata
 
 
 class GPSParser(BaseParser):
@@ -67,6 +67,7 @@ class GPSParser(BaseParser):
             # next $GPGGA, so we can send the data we've obtained
             self.data['timestamp'] = BaseParser.timestamp
             sender.send_data(self.data, self.url)
+            planetarydata.Calculator().on_data_update(GPSParser, self.data)
             self.data = {}
         return True
 
