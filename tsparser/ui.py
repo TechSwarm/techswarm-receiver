@@ -123,7 +123,7 @@ class UserInterface(metaclass=Singleton):
                     self.__logs_auto_scrolling = True
                 else:
                     self.__scroll_position += 1
-        
+
     def __render_frame(self):
         lines, cols = self.__screen.getmaxyx()
         min_lines, min_cols = self.__SCREEN_MINIMAL_SIZE
@@ -242,6 +242,7 @@ class UserInterface(metaclass=Singleton):
         stats_to_display = self.__prepare_stats()
         for name, value in stats_to_display:
             sub_win.addstr('{}: {}\n'.format(name, value))
+        self.__render_progress_window(window)
 
     @staticmethod
     def __prepare_stats():
@@ -280,9 +281,46 @@ class UserInterface(metaclass=Singleton):
         )
         return stats_scheme
 
+    def __render_progress_window(self, window):
+        sdc = StatisticDataCollector()
+        progress = sdc.get_progress()
+        title = sdc.get_progress_title()
+        subtitle = sdc.get_progress_subtitle()
+
+        if progress == -1:
+            return
+
+        # Create progress window
+        lines, cols = window.getmaxyx()
+        beg_y, beg_x = window.getbegyx()
+        progress_win = window.subwin(beg_y + lines - 5, beg_x)
+        self.__draw_entitled_box(progress_win, 'Progress',
+                                 0, 0, 0, 0, curses.ACS_SSSB, curses.ACS_SBSS)
+
+        # Subwindow
+        sub_win = self.__get_sub_window(progress_win)
+        lines, cols = sub_win.getmaxyx()
+
+        # Draw window content
+        sub_win.insstr(0, int(cols / 2 - len(title) / 2), title)
+        self.__draw_progress_bar(progress, sub_win, 1, cols)
+        sub_win.insstr(2, int(cols / 2 - len(subtitle) / 2), subtitle)
+
     @staticmethod
-    def __draw_entitled_box(window, title):
-        window.box()
+    def __draw_progress_bar(progress, window, y, width):
+        progress_str = '{}%'.format(progress)
+        s = ' ' * width
+        x_pos = int(width / 2 - len(progress_str) / 2)
+        s = s[:x_pos] + progress_str + s[x_pos:]
+
+        for i in range(width):
+            fill = i / width < progress / 100
+            window.insch(y, i, s[i],
+                          curses.A_REVERSE if fill else curses.A_NORMAL)
+
+    @staticmethod
+    def __draw_entitled_box(window, title, *border_args):
+        window.border(*border_args)
         window.addstr(0, 1, title)
 
     @staticmethod

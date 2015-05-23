@@ -21,6 +21,10 @@ class StatisticDataCollector(metaclass=Singleton):
         self.__count_of_queued_requests = 0
         self.__total_count_of_sent_requests = 0
 
+        self.__progress = -1
+        self.__progress_title = ''
+        self.__progress_subtitle = ''
+
         self.__logger = Logger(config.LOG_FILENAME)
         self.__data_mutex = Lock()
 
@@ -62,6 +66,13 @@ class StatisticDataCollector(metaclass=Singleton):
         self.__data_mutex.acquire()
         self.__count_of_queued_requests -= 1
         self.__total_count_of_sent_requests += 1
+        self.__data_mutex.release()
+
+    def on_progress_changed(self, progress, title, subtitle):
+        self.__data_mutex.acquire()
+        self.__progress = progress
+        self.__progress_title = title
+        self.__progress_subtitle = subtitle
         self.__data_mutex.release()
 
     def get_logger(self):
@@ -122,3 +133,21 @@ class StatisticDataCollector(metaclass=Singleton):
         total_sent_requests = self.__total_count_of_sent_requests
         self.__data_mutex.release()
         return total_sent_requests
+
+    def get_progress(self):
+        self.__data_mutex.acquire()
+        progress = self.__progress
+        self.__data_mutex.release()
+        return progress
+
+    def get_progress_title(self):
+        self.__data_mutex.acquire()
+        progress_title = self.__progress_title
+        self.__data_mutex.release()
+        return progress_title
+
+    def get_progress_subtitle(self):
+        self.__data_mutex.acquire()
+        progress_subtitle = self.__progress_subtitle
+        self.__data_mutex.release()
+        return progress_subtitle
