@@ -22,7 +22,7 @@ class ParserTestCase(unittest.TestCase):
         parsers = main._get_parsers()
         # Append timestamp so it does not have to be included in test data
         self.parse_line = lambda line: (
-            main._parse_line(parsers, line + ',' + DEFAULT_TIMESTAMP))
+            main._parse_line(parsers, line + ',' + DEFAULT_TIMESTAMP, False))
         self.parse_output = types.MethodType(_parse_output, self)
 
         # Replace send_data with mock, so it does not actually send any data

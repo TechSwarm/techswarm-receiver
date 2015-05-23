@@ -37,7 +37,7 @@ def _get_parsers():
     ]
 
 
-def _parse_line(parsers, line):
+def _parse_line(parsers, line, catch_exceptions=True):
     StatisticDataCollector().on_new_received_data(line)
     values = line.split(',')
     BaseParser.timestamp = values.pop().strip()
@@ -46,8 +46,11 @@ def _parse_line(parsers, line):
             if parser.parse(line, *values):
                 break
         except Exception:
-            StatisticDataCollector().get_logger().log(
-                parser.__class__.__name__, traceback.format_exc())
+            if catch_exceptions:
+                StatisticDataCollector().get_logger().log(
+                    parser.__class__.__name__, traceback.format_exc())
+            else:
+                raise
     else:
         error_message = 'Output line was not parsed by any parser: {}'.format(line)
         StatisticDataCollector().get_logger().log('system', error_message)
