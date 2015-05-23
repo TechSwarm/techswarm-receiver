@@ -1,10 +1,14 @@
 from time import sleep
 import traceback
 
-from tsparser import config
+from tsparser import config, panorama
 from tsparser.parser import BaseParser, GPSParser, IMUParser, PhotoParser
 from tsparser.sender import Sender
 from tsparser.utils import StatisticDataCollector
+
+
+def init():
+    panorama.check_panotools_available()
 
 
 def parse(input_file=None):

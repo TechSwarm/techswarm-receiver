@@ -1,4 +1,5 @@
 import subprocess
+import shutil
 
 from PIL import Image
 
@@ -114,6 +115,24 @@ def stitch_panorama(output_url, project_url, *input_urls):
     __pano_to_jpeg(output_url + '.tif', output_url + '.jpg')
 
     __reset_progress()
+
+
+def check_panotools_available():
+    """
+    Check whether all required Panorama tools are installed and available
+    in the system and throw an exception if they are not.
+
+    List of the required tools is taken from the PARAMS dict (its keys
+    are taken, to be exact).
+    """
+    missing = []
+    for command in PARAMS.keys():
+        if shutil.which(command) is None:
+            missing += [command]
+    if missing:
+        raise FileNotFoundError('Panorama tools are missing from the OS. '
+                                'Tools that are not available: {}'
+                                .format(', '.join(sorted(missing))))
 
 
 def __set_progress(progress, operation):

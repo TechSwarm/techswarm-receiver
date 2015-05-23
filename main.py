@@ -7,6 +7,7 @@ from tsparser.utils.statistic_data_collector import StatisticDataCollector
 
 UserInterface().run()
 try:
+    main.init()
     main.parse()
 except Exception:
     logger = StatisticDataCollector().get_logger()
