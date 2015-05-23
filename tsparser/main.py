@@ -1,4 +1,5 @@
 from time import sleep
+import traceback
 
 from tsparser import config
 from tsparser.parser import BaseParser
@@ -47,9 +48,9 @@ def _parse_line(parsers, line):
         try:
             if parser.parse(line, *values):
                 break
-        except Exception as err:
-            StatisticDataCollector().get_logger()\
-                .log(parser.__class__.__name__, '{}: {}'.format(err.__class__.__name__, err))
+        except Exception:
+            StatisticDataCollector().get_logger().log(
+                parser.__class__.__name__, traceback.format_exc())
     else:
         error_message = 'Output line was not parsed by any parser: {}'.format(line)
         StatisticDataCollector().get_logger().log('system', error_message)
