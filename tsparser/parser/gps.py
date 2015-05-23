@@ -67,7 +67,7 @@ class GPSParser(BaseParser):
             # next $GPGGA, so we can send the data we've obtained
             self.data['timestamp'] = BaseParser.timestamp
             sender.send_data(self.data, self.url)
-            planetarydata.Calculator().on_data_update(GPSParser, self.data)
+            planetarydata.Calculator().on_data_update('gps', self.data)
             self.data = {}
         return True
 

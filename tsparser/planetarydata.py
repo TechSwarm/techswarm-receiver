@@ -2,9 +2,23 @@ from threading import Thread, Lock
 from time import sleep
 
 from tsparser import config, sender
-from tsparser.parser import GPSParser, IMUParser, SHTParser
 from tsparser.timestamp import get_timestamp
 from tsparser.utils.singleton import Singleton
+
+
+def calculate_air_density(obtained_data, already_calculated_data):
+    Rs = 287.05  # J / (kg * K)
+    p = obtained_data['imu']['pressure']  # must be in Pa
+    T = obtained_data['sht']['temperature'] + 273.15  # must be in K
+    ro = p / (Rs * T)
+    return ro
+
+
+def calculate_dew_point_temperature(obtained_data, already_calculated_data):
+    W = obtained_data['sht']['humidity']  # must be in %
+    T = obtained_data['sht']['temperature'] + 273.15  # must be in *C
+    Tr = (W / 100) ** (1/8) * (112 + 0.9 * T) + 0.1 * T - 112
+    return Tr
 
 
 class Calculator(metaclass=Singleton):
@@ -21,9 +35,9 @@ class Calculator(metaclass=Singleton):
 
     def __init__(self):
         self.__OBTAINED_DATA_SCHEME = {
-            GPSParser: None,
-            IMUParser: None,
-            SHTParser: None
+            'gps': None,
+            'imu': None,
+            'sht': None
         }
         self.__obtained_data = dict(self.__OBTAINED_DATA_SCHEME)
         self.__data_mutex = Lock()
@@ -61,19 +75,3 @@ class Calculator(metaclass=Singleton):
             result = calc_method(obtained_data, calculated_data)
             calculated_data[result_name] = result
         return calculated_data
-
-
-def calculate_air_density(obtained_data, already_calculated_data):
-    Rs = 287.05  # J / (kg * K)
-    p = obtained_data[IMUParser]['pressure']  # must be in Pa
-    T = obtained_data[SHTParser]['temperature'] + 273.15  # must be in K
-    ro = p / (Rs * T)
-    return ro
-
-
-def calculate_dew_point_temperature(obtained_data, already_calculated_data):
-    W = obtained_data[SHTParser]['humidity']  # must be in %
-    T = obtained_data[SHTParser]['temperature'] + 273.15  # must be in *C
-    Tr = (W / 100) ** (1/8) * (112 + 0.9 * T) + 0.1 * T - 112
-    return Tr
-

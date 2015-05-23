@@ -27,7 +27,7 @@ class IMUParser(BaseParser):
         if all([self.gyro, self.accel, self.magnet, self.pressure]):
             data = self.generate_data()
             sender.send_data(data, IMUParser.url)
-            planetarydata.Calculator().on_data_update(IMUParser, data)
+            planetarydata.Calculator().on_data_update('imu', data)
             self.gyro = self.accel = self.magnet = self.pressure = None
 
         return True

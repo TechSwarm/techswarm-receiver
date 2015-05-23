@@ -16,5 +16,5 @@ class SHTParser(BaseParser):
             'humidity': 43.5
         }
         sender.send_data(fake_data, SHTParser.url)
-        planetarydata.Calculator().on_data_update(SHTParser, fake_data)
+        planetarydata.Calculator().on_data_update('sht', fake_data)
         return True
