@@ -33,3 +33,4 @@ class ParseException(Exception):
 from tsparser.parser.gps import GPSParser
 from tsparser.parser.imu import IMUParser
 from tsparser.parser.photo import PhotoParser
+from tsparser.parser.sht import SHTParser
