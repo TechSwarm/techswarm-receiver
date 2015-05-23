@@ -28,11 +28,10 @@ class UserInterface(metaclass=Singleton):
                 self.__process_events()
                 self.__render_frame()
         except Exception as err:
-            self.__screen.clear()
             error_message = '{}: {}'.format(err.__class__.__name__, err)
-            self.__screen.addstr(error_message)
             StatisticDataCollector().get_logger().log('ui', error_message)
-            self.__screen.refresh()
+            curses.endwin()
+            print(error_message)
 
     def __init_curses(self):
         self.__screen = curses.initscr()
