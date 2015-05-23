@@ -43,6 +43,9 @@ class Calculator(metaclass=Singleton):
                 self.__obtained_data = dict(self.__OBTAINED_DATA_SCHEME)
                 self.__data_mutex.release()  # Do *NOT* block on_data_update method!
 
+                # TODO historical data could be stored here in list
+                #   (instance variable). It doesn't need mutex, cause it is
+                #   used only in this thread.
                 calculated_data = self.__calculate_data(obtained_data)
                 calculated_data['timestamp'] = timestamp
                 sender.send_data(calculated_data, self.url)
