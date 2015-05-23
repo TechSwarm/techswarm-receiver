@@ -28,3 +28,8 @@ class ParseException(Exception):
     transmission error.
     """
     pass
+
+
+from tsparser.parser.gps import GPSParser
+from tsparser.parser.imu import IMUParser
+from tsparser.parser.photo import PhotoParser
