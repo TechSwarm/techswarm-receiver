@@ -15,6 +15,8 @@ class Calculator(metaclass=Singleton):
         # Method gets two dicts as arguments: first obtained from parsers,
         #   second contains already calculated parameters. Method should
         #   return result.
+        ('air_density', calculate_air_density),
+        ('dew_point_temp', calculate_dew_point_temperature),
     )
 
     def __init__(self):
@@ -57,4 +59,18 @@ class Calculator(metaclass=Singleton):
             calculated_data[result_name] = result
         return calculated_data
 
-    # calculators
+
+def calculate_air_density(obtained_data, already_calculated_data):
+    Rs = 287.05  # J / (kg * K)
+    p = obtained_data[IMUParser]['pressure']  # must be in Pa
+    T = obtained_data[SHTParser]['temperature'] + 273.15  # must be in K
+    ro = p / (Rs * T)
+    return ro
+
+
+def calculate_dew_point_temperature(obtained_data, already_calculated_data):
+    W = obtained_data[SHTParser]['humidity']  # must be in %
+    T = obtained_data[SHTParser]['temperature'] + 273.15  # must be in *C
+    Tr = (W / 100) ** (1/8) * (112 + 0.9 * T) + 0.1 * T - 112
+    return Tr
+
