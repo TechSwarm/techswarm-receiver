@@ -1,5 +1,6 @@
 from queue import Queue
 from threading import Thread
+import traceback
 
 import requests
 
@@ -55,7 +56,8 @@ def _send_data(data, url, file=None):
             response = requests.post(url, data=data,
                                      auth=(config.USERNAME, config.PASSWORD),
                                      files={'photo': ("photo.jpg", file)})
-    except Exception as err:
-        StatisticDataCollector().get_logger().log('sender', '{}: {}'.format(err.__class__.__name__, err))
+    except Exception:
+        StatisticDataCollector().get_logger().log('sender',
+                                                  traceback.format_exc())
         return False
     return response.status_code == 201
