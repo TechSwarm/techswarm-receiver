@@ -22,7 +22,7 @@ def calculate_dew_point_temperature(obtained_data, already_calculated_data):
 
 
 class Calculator(metaclass=Singleton):
-    url = config.URL + '/planet'
+    url = config.URL + '/planetarydata'
     DATA_CALCULATOR_QUEUE = (
         # Remember! Each entry has access to results of entries above
         # Format: (result_name, method)
