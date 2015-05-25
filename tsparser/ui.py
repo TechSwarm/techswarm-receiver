@@ -41,16 +41,17 @@ class UserInterface(metaclass=Singleton):
         self.__screen.keypad(True)
         self.__SCREEN_MINIMAL_SIZE = 24, 80  # lines, cols
 
-        self.__TIMESTAMP_COLOR = 1
-        curses.init_pair(self.__TIMESTAMP_COLOR, curses.COLOR_RED, curses.COLOR_BLACK)
-        self.__MODULE_NAME_COLOR = 2
-        curses.init_pair(self.__MODULE_NAME_COLOR, curses.COLOR_BLUE, curses.COLOR_BLACK)
-        self.__INFO_BAR_DESC_COLOR = 3
-        curses.init_pair(self.__INFO_BAR_DESC_COLOR, curses.COLOR_BLACK, curses.COLOR_CYAN)
-        self.__FILTER_WINDOW_BACKGROUND = 4
-        curses.init_pair(self.__FILTER_WINDOW_BACKGROUND, curses.COLOR_WHITE, curses.COLOR_BLUE)
-        self.__FILTER_WINDOW_SELECTION = 5
-        curses.init_pair(self.__FILTER_WINDOW_SELECTION, curses.COLOR_BLACK, curses.COLOR_CYAN)
+        self.__last_color = 1
+        self.__TIMESTAMP_COLOR = self.__init_color_pair(
+            curses.COLOR_RED, curses.COLOR_BLACK)
+        self.__MODULE_NAME_COLOR = self.__init_color_pair(
+            curses.COLOR_BLUE, curses.COLOR_BLACK)
+        self.__INFO_BAR_DESC_COLOR = self.__init_color_pair(
+            curses.COLOR_BLACK, curses.COLOR_CYAN)
+        self.__FILTER_WINDOW_BACKGROUND = self.__init_color_pair(
+            curses.COLOR_WHITE, curses.COLOR_BLUE)
+        self.__FILTER_WINDOW_SELECTION = self.__init_color_pair(
+            curses.COLOR_BLACK, curses.COLOR_CYAN)
 
         self.__logs_auto_scrolling = True
         self.__scroll_position = 0
@@ -61,6 +62,11 @@ class UserInterface(metaclass=Singleton):
         self.__filter_selected_index = int()
         self.__filter_selected_module = str()
         StatisticDataCollector().get_logger().log('ui', 'User interface initialized!')
+
+    def __init_color_pair(self, fb, bg):
+        curses.init_pair(self.__last_color, fb, bg)
+        self.__last_color += 1
+        return self.__last_color - 1
 
     def __update_filter(self):
         for module_name in StatisticDataCollector().get_logger().get_all_modules():
