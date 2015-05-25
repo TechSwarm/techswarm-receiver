@@ -352,10 +352,9 @@ class UserInterface(metaclass=Singleton):
 
     def __render_filter_list(self, window):
         lines, cols = window.getmaxyx()
-        loop_cnt = 0
-        for module_name, is_checked in self.__filter.items():
+        for i, (module_name, is_checked) in enumerate(self.__filter.items()):
             color = self.__FILTER_WINDOW_BACKGROUND
-            is_entry_selected = self.__filter_selected_index == loop_cnt
+            is_entry_selected = self.__filter_selected_index == i
             if is_entry_selected:
                 color = self.__FILTER_WINDOW_SELECTION
                 self.__filter_selected_module = module_name
@@ -370,4 +369,3 @@ class UserInterface(metaclass=Singleton):
                 window.addstr(prefix + module_name, curses.color_pair(color))
             except _curses.error:
                 break
-            loop_cnt += 1
