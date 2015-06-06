@@ -12,7 +12,9 @@ class SHTParser(BaseParser):
         if data_id not in ['$TEMP', '$HUM']:  # temporary ids
             return False
         fake_data = {
-            'temperature': 20.0,
+            'temperature': 20.0,  # TODO ESI calculator assumes that
+                                  # temperature is in Celsius degrees,
+                                  # so fix that code when this is implemented
             'humidity': 43.5
         }
         sender.send_data(fake_data, SHTParser.url)
