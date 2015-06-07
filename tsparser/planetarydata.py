@@ -85,14 +85,12 @@ class Calculator(metaclass=Singleton):
         self.__calculate_esi()
 
     def __cache_accel_and_alt(self):
-        # TODO wait for Jelen's answer and check data units read from sensors!
-        # (must be in SI)
-        # altitude is in meters, but acceleration is unknown units
+        accel_factor = 0.061 / 1000
         begin_ind = len(self.__accel_and_alt_cache)
         for imu, gps in zip(self.__all_data['imu'][begin_ind:],
                             self.__all_data['gps'][begin_ind:]):
             acceleration = math.sqrt(imu['accel_x']**2 + imu['accel_y']**2 +
-                                     imu['accel_z']**2)
+                                     imu['accel_z']**2) * accel_factor
             altitude = gps['altitude']
             self.__accel_and_alt_cache.append((acceleration, altitude))
 
