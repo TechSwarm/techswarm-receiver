@@ -30,7 +30,7 @@ def receive():
             except IOError:
                 print("ERROR while writing photo")
                 continue
-            line = '$PHOTO:' + config.PHOTO_DIRECTORY + timestamp + ',' + timestamp +'\n'
+            line = '$PHOTO,' + config.PHOTO_DIRECTORY + timestamp + ',' + timestamp +'\n'
             raw.write(line)
             raw.flush()
 
