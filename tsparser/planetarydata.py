@@ -83,6 +83,7 @@ class Calculator(metaclass=Singleton):
         self.__calculate_earth_density()
         self.__calculate_escape_speed()
         self.__calculate_esi()
+        self.__calculate_wind_direction_and_speed()
 
     def __cache_accel_and_alt(self):
         accel_factor = 0.061 / 1000
@@ -146,3 +147,34 @@ class Calculator(metaclass=Singleton):
                    ** (d[2] / len(esi_data)) for d in esi_data]
         self.__calculated_data['esi'] = functools.reduce(operator.mul,
                                                          factors, 1)
+
+    def __calculate_wind_direction_and_speed(self):
+        first_reading = self.__all_data['gps'][0]
+        last_reading = self.__all_data['gps'][-1]
+        latitude_diff = last_reading['latitude'] - first_reading['latitude']
+        longitude_diff = last_reading['longitude'] - first_reading['longitude']
+        self.__calculated_data['wind_direction'] = math.atan2(
+            latitude_diff, longitude_diff
+        )
+
+        # convert latitude and longitude into meters
+        degrees_to_meters_factor = 40e3 / 360
+        y_len = latitude_diff * degrees_to_meters_factor
+        x_len = longitude_diff * degrees_to_meters_factor
+
+        distance = math.sqrt(y_len**2 + x_len**2)
+        start_time = self.__get_day_seconds_from_timestamp(
+            first_reading['timestamp'])
+        end_time = self.__get_day_seconds_from_timestamp(
+            last_reading['timestamp'])
+        time_diff = end_time - start_time
+        self.__calculated_data['wind_speed'] = distance / time_diff
+
+
+    @staticmethod
+    def __get_day_seconds_from_timestamp(timestamp):
+        hours = int(timestamp[11:13])
+        minutes = int(timestamp[14:16])
+        seconds = int(timestamp[17:19])
+        microseconds = int(timestamp[20:])
+        return hours * 3600 + minutes * 60 + seconds + microseconds / 1e6
