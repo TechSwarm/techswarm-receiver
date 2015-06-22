@@ -35,7 +35,7 @@ def receive():
             raw.flush()
 
         else:
-            line = str(line).strip('\n') + ',' + get_timestamp() + '\n'
+            line = str(line).strip('\r\n') + ',' + get_timestamp() + '\r\n'
             raw.write(line)
             raw.flush()
             # print(line)
