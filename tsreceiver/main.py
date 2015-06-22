@@ -20,9 +20,20 @@ def receive():
             print(rawline)
             print("line cannot be decoded\n")
             continue
-        if line.find("$PHOTO") is not -1:
-            pass
-            # todo: implemet receiving photos
+        if line.find("$FOTO:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx") is not -1:
+            photo_RGB565 = usart.get_photo_as_bytearray(320, 240)
+            timestamp = get_timestamp()
+            try:
+                photo_file = open(config.PHOTO_DIRECTORY + timestamp, "wb")
+                photo_file.write(photo_RGB565)
+                photo_file.close()
+            except IOError:
+                print("ERROR while writing photo")
+                continue
+            line = '$PHOTO:' + config.PHOTO_DIRECTORY + timestamp + ',' + timestamp +'\n'
+            raw.write(line)
+            raw.flush()
+
         else:
             line = str(line).strip('\n') + ',' + get_timestamp() + '\n'
             raw.write(line)
