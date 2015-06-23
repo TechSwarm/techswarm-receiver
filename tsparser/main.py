@@ -2,7 +2,7 @@ from time import sleep
 import traceback
 
 from tsparser import config, panorama
-from tsparser.parser import BaseParser, GPSParser, IMUParser, PhotoParser
+from tsparser.parser import BaseParser, GPSParser, IMUParser, SHTParser, PhotoParser
 from tsparser.sender import Sender
 from tsparser.utils import StatisticDataCollector
 
@@ -37,6 +37,7 @@ def _get_parsers():
     return [
         IMUParser(),
         GPSParser(),
+        SHTParser(),
         PhotoParser()
     ]
 
