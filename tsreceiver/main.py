@@ -20,7 +20,7 @@ def receive():
             print(rawline)
             print("line cannot be decoded\n")
             continue
-        if line.find("$FOTO:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx") is not -1:
+        if line.find(config.PHOTO_HEADER) is not -1:
             photo_RGB565 = usart.get_photo_as_bytearray(320, 240)
             timestamp = get_timestamp()
             try:

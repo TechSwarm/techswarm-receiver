@@ -2,6 +2,13 @@ from tsparser.parser import BaseParser
 from tsparser import config, sender, planetarydata
 
 
+def uint2int(value):
+    #vprint("converting %d" % value)
+    if value < 32768:
+        return value
+    else:
+        return value - 65536
+
 class IMUParser(BaseParser):
     url = config.URL + '/imu'
 
@@ -16,11 +23,11 @@ class IMUParser(BaseParser):
             self.pressure = self.validate_values(values, 1, 'MBAR')[0]
         else:
             if data_id == '$GYRO':
-                self.gyro = self.validate_values(values, 3, 'GYRO')
+                self.gyro = [uint2int(x) for x in self.validate_values(values, 3, 'GYRO')]
             elif data_id == '$ACCEL':
-                self.accel = self.validate_values(values, 3, 'ACCEL')
+                self.accel = [uint2int(x) for x in self.validate_values(values, 3, 'ACCEL')]
             elif data_id == '$MAGNET':
-                self.magnet = self.validate_values(values, 3, 'MAGNET')
+                self.magnet = [uint2int(x) for x in self.validate_values(values, 3, 'MAGNET')]
             else:
                 return False
 
