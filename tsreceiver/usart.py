@@ -29,9 +29,12 @@ class Usart:
         :rtype: bytearray
         """
         # skip all headers
+
+        print("Entering byte reading mode")	
+
         input_data = self.uart_connection.read(config.PHOTO_PACKET_SIZE*2 + 2)
         try:
-            while input_data.decode("utf-8").find(config.PHOTO_HEADER) == -1:
+            while input_data.decode("utf-8").find(config.PHOTO_HEADER) != -1:
                 input_data = self.uart_connection.read(config.PHOTO_PACKET_SIZE*2 + 2)
         except UnicodeDecodeError:
             pass
@@ -43,6 +46,7 @@ class Usart:
         lastx = -1
         lasty = -1
         for i in range(16*240):
+            print("Byte reading", lasty / 240 * 100, "%")
             if lasty > input_data[1]:
                 break
             if lasty == input_data[1] and lastx >= input_data[0]:
@@ -57,5 +61,7 @@ class Usart:
                 break
 
             input_data = self.uart_connection.read(config.PHOTO_PACKET_SIZE*2 + 2)
+
+        print("Exiting byte reading mode")
         return photo
 
